@@ -16,8 +16,6 @@
 
 A script mod for The Sims 4 that fixes game state EA leaves dangling: loops that never back off, failures with no fallback, event listeners that are lost or never removed, and work the game repeats when the answer can't have changed. Each of these makes the game slower or makes Sims misbehave.
 
-Loose Ends replaces **Quick Slice** and **Phantom Mood Fix**. If you have either installed, remove it; Loose Ends tells you if it finds them.
-
 ## What it fixes
 
 | Fix | What you'll notice |
