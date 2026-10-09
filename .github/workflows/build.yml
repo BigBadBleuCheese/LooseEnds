@@ -1,0 +1,45 @@
+name: Build
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container: python:3.7
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the mod
+        run: python build.py
+      - name: Build the TestKit
+        run: python build_testkit.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: CodeBleu-LooseEnds
+          path: build/CodeBleu-LooseEnds.ts4script
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        with:
+          name: CodeBleu-LooseEnds-TestKit
+          path: build/CodeBleu-LooseEnds-TestKit.ts4script
+          if-no-files-found: error
+
+  release:
+    if: github.event_name == 'release'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: CodeBleu-LooseEnds
+      - name: Attach the mod to the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "${{ github.event.release.tag_name }}" CodeBleu-LooseEnds.ts4script --clobber --repo "${{ github.repository }}"

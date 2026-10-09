@@ -1,0 +1,10 @@
+build/
+game/
+__pycache__/
+*.pyc
+*.prof
+LooseEnds_*profile_*.txt
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
