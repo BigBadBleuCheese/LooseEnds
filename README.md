@@ -22,6 +22,9 @@ A script mod for The Sims 4 that fixes game state EA leaves dangling: loops that
 |---|---|
 | Faster snippet lookups for pie menus | Pie menus open faster, especially with many mods installed. |
 | Reuse Sim filter results while building a pie menu | The same. While one menu is being built, the game asks the same "who qualifies?" questions thousands of times; the answers are remembered for that menu. |
+| Score pie menu entries without rescanning every moodlet | Pie menus open faster for Sims with many moodlets. Each menu entry used to be checked against every moodlet; now it's checked only against the moodlets that can change its score. |
+| Find a Sim picker's candidate for its tests without the long lookup | Pie menus open faster. Interactions where you pick a Sim test every Sim in the game before they can be shown, and every test looked up the candidate the long way. |
+| Check pie menu entries against dynasty rules without rebuilding every rule | Pie menus open faster for Sims in a dynasty. Every entry was checked against every dynasty rule by rebuilding that rule's list of interactions; now each list is built once. |
 | Phantom "too Tense/Uncomfortable" mood fix | Sims are no longer refused interactions as "far too Tense" or "far too Uncomfortable" while their mood is positive. |
 | Autonomous Sim pickers skip Sims their follow-up can't run on | Pets stop trying to wake up Sims who aren't asleep, over and over. Sims stop repeatedly starting chats with Sims they can't actually talk to. |
 | Autonomous chats that find nothing to say stop retrying the same Sim | Part of the chat fix above. |
@@ -54,10 +57,11 @@ Open the console with Ctrl+Shift+C. None of these need `testingcheats`.
 | `looseends.disable <fix>` | Turns a fix off for this session. |
 | `looseends.enable <fix>` | Turns it back on (never turns on a fix that failed its safety check). |
 | `looseends.profile <sim id>` | Times building the active Sim's pie menu for that Sim and writes a profile to your Mods folder. |
+| `looseends.anatomy <sim id>` | Builds the same pie menu and writes a report to your Mods folder of which interactions, tests and Sim pickers took the time. |
 | `looseends.profile_next_picker` | Profiles the next picker window you open (for example, the recipe picker). |
 | `looseends.time_next_picker` | Times the next picker window from your click to the window being sent. |
 
-Fix names for `disable`/`enable`: `ordered_types`, `pie_menu_filters`, `phantom_mood`, `autonomous_sim_pickers`, `social_picker_cooldown`, `leave_lot`, `travel_event_subscriptions`, `small_business_employee_events`, `chef_events`.
+Fix names for `disable`/`enable`: `ordered_types`, `pie_menu_filters`, `phantom_mood`, `autonomous_sim_pickers`, `content_scoring`, `picked_sim_lookup`, `dynasty_rules`, `social_picker_cooldown`, `leave_lot`, `travel_event_subscriptions`, `small_business_employee_events`, `chef_events`.
 
 ## For modders
 
@@ -90,7 +94,7 @@ python run_tests.py        # each test module in its own process
 Each fix declares the game functions it wraps (`Hook`) and the game functions whose behavior it relies on (`Requirement`), each with a 64-bit FNV-1a fingerprint of the function's code object. A fix installs only if every fingerprint matches. Otherwise:
 
 - If the mismatched code is EA's, the game changed and the fix stays off.
-- If it's another mod's wrapper whose `functools.wraps` chain leads to the exact EA function, the fix stacks on top of it (unless the hook opts out with `stack_on_mods=False`).
+- If it's another mod's wrapper whose `functools.wraps` chain leads to the exact EA function, the fix stacks on top of it, unless the hook or requirement opts out with `stack_on_mods=False` (a fix that skips or bypasses that function would skip the other mod's wrapper too).
 - Anything else is reported as a conflict with that mod.
 
 Install is all-or-nothing per fix, with rollback. At run time, a fix's own exception switches it off and its wrappers pass straight through to the game's code.

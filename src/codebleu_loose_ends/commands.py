@@ -9,7 +9,7 @@ import time
 import sims4.commands
 
 from codebleu_loose_ends import guard
-from codebleu_loose_ends.fixes import autonomous_sim_pickers, leave_lot, pie_menu_filters, social_picker_cooldown, travel_event_subscriptions
+from codebleu_loose_ends.fixes import autonomous_sim_pickers, content_scoring, dynasty_rules, leave_lot, picked_sim_lookup, pie_menu_filters, social_picker_cooldown, travel_event_subscriptions
 
 
 @sims4.commands.Command('looseends.status', command_type=sims4.commands.CommandType.Live)
@@ -18,6 +18,9 @@ def loose_ends_status(_connection=None):
     for fix in guard.fixes:
         output('Loose Ends: {}: {}: {}'.format(fix.key, fix.state, fix.detail))
     output('Loose Ends: pie menu Sim filter memo {}'.format(pie_menu_filters.stats))
+    output('Loose Ends: content scoring {}'.format(content_scoring.stats))
+    output('Loose Ends: picked Sim lookups {}'.format(picked_sim_lookup.stats))
+    output('Loose Ends: dynasty rule checks {}'.format(dynasty_rules.stats))
     output('Loose Ends: leave lot {}'.format(leave_lot.stats))
     output('Loose Ends: autonomous Sim picker candidates {}'.format(autonomous_sim_pickers.stats))
     output('Loose Ends: social picker cooldown {}'.format(social_picker_cooldown.stats))
@@ -70,13 +73,14 @@ def loose_ends_profile(target_id: int = None, _connection=None):
         choices = _build(target, _connection)
         unprofiled = time.perf_counter() - started
 
-        before = dict(pie_menu_filters.stats)
+        tracked = {'filter memo': pie_menu_filters.stats, 'content scoring': content_scoring.stats, 'picked Sim lookups': picked_sim_lookup.stats, 'dynasty rule checks': dynasty_rules.stats}
+        before = {name: dict(values) for name, values in tracked.items()}
         profiler, kind = _profiler()
         started = time.perf_counter()
         profiler.runcall(_build, target, _connection)
         profiled = time.perf_counter() - started
         profiler.create_stats()
-        memo = {k: pie_menu_filters.stats[k] - before[k] for k in before}
+        memo = '; '.join('{} {}'.format(name, {k: values[k] - before[name][k] for k in before[name]}) for name, values in tracked.items())
 
         import pstats
         stamp = datetime.datetime.now().strftime('%Y%m%d-%H%M%S-%f')
@@ -85,17 +89,34 @@ def loose_ends_profile(target_id: int = None, _connection=None):
             marshal.dump(profiler.stats, f)
 
         text = io.StringIO()
-        text.write('Loose Ends pie menu profile\nTarget: {} ({})\nChoices: {}\nUnprofiled build: {:.4f} s\nProfiled build: {:.4f} s with {}\nSim filter memo during profiled build: {}\n\n'.format(target, target.id, choices, unprofiled, profiled, kind, memo))
+        text.write('Loose Ends pie menu profile\nTarget: {} ({})\nChoices: {}\nUnprofiled build: {:.4f} s\nProfiled build: {:.4f} s with {}\nCounters during profiled build: {}\n\n'.format(target, target.id, choices, unprofiled, profiled, kind, memo))
         stats = pstats.Stats(profiler, stream=text)
         stats.sort_stats('cumulative').print_stats(150)
         stats.sort_stats('tottime').print_stats(150)
         with open(base + '.txt', 'w', encoding='utf-8') as f:
             f.write(text.getvalue())
 
-        output('Loose Ends: {} choices; build took {:.4f} s ({:.4f} s profiled with {}); filter memo {}. Wrote {}.txt and .prof'.format(choices, unprofiled, profiled, kind.split(' ')[0], memo, base))
+        output('Loose Ends: {} choices; build took {:.4f} s ({:.4f} s profiled with {}); {}. Wrote {}.txt and .prof'.format(choices, unprofiled, profiled, kind.split(' ')[0], memo, base))
     except Exception as e:
         guard.logger.exception('Loose Ends: profile failed')
         output('Loose Ends: profile failed: {}: {}'.format(type(e).__name__, e))
+
+
+@sims4.commands.Command('looseends.anatomy', command_type=sims4.commands.CommandType.Live)
+def loose_ends_anatomy(target_id: int = None, _connection=None):
+    import services
+    output = sims4.commands.CheatOutput(_connection)
+    target = services.object_manager().get(target_id) if target_id is not None else None
+    if target is None:
+        output('Loose Ends: usage: looseends.anatomy <id of the Sim or object to click>')
+        return
+    try:
+        from codebleu_loose_ends import anatomy
+        choices, plain, instrumented, path = anatomy.run(target, _connection, _build, _mods_folder(), [(fix.key, fix.state) for fix in guard.fixes])
+        output('Loose Ends: {} choices; build took {:.4f} s ({:.4f} s with instruments). Wrote {}'.format(choices, plain, instrumented, path))
+    except Exception as e:
+        guard.logger.exception('Loose Ends: anatomy failed')
+        output('Loose Ends: anatomy failed: {}: {}'.format(type(e).__name__, e))
 
 
 _next_picker = {'armed': False, 'connection': None, 'installed': False, 'timing': False, 'times': {}}

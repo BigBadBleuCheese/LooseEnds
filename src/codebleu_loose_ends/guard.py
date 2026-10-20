@@ -26,6 +26,14 @@ DISABLED = 'disabled by player'
 
 fixes = []
 fault_listeners = []
+temporary = {}
+
+
+def unpatched(value):
+    """The attribute value behind any temporary diagnostic wrappers (looseends.anatomy) installed over it."""
+    while temporary and id(value) in temporary:
+        value = temporary[id(value)]
+    return value
 
 
 class Hook:
@@ -44,12 +52,16 @@ class Hook:
 
 
 class Requirement:
-    """An EA function a fix relies on without wrapping it; another mod's wrapper around it is acceptable."""
+    """
+    An EA function a fix relies on without wrapping it. Another mod's wrapper around it is acceptable unless
+    stack_on_mods is False (the fix bypasses the function, so a wrapper would be skipped).
+    """
 
-    def __init__(self, owner, name, expected):
+    def __init__(self, owner, name, expected, stack_on_mods=True):
         self.owner = owner
         self.name = name
         self.expected = expected
+        self.stack_on_mods = stack_on_mods
 
 
 def _function(raw):
@@ -164,7 +176,7 @@ class Fix:
             return
         self.notes = []
         for requirement in requirements:
-            problem, detail = evaluate(requirement.owner, requirement.name, requirement.expected)
+            problem, detail = evaluate(requirement.owner, requirement.name, requirement.expected, requirement.stack_on_mods)
             if problem is not None:
                 self._set(problem, detail, requirement.owner, requirement.name)
                 return

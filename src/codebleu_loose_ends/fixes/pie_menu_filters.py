@@ -73,13 +73,13 @@ def _make_submit_filter(original):
     def submit_filter(self, sim_filter, callback, callback_event_data=None, sim_constraints=None, requesting_sim_info=None, blacklist_sim_ids=EMPTY_SET, required_story_progression_arc=None,
             allow_yielding=True, start_time=None, end_time=None, household_id=None, club=None, additional_filter_terms=(), gsi_source_fn=None, include_rabbithole_sims=False,
             include_missing_pets=False):
-        arguments = dict(callback_event_data=callback_event_data, sim_constraints=sim_constraints, requesting_sim_info=requesting_sim_info, blacklist_sim_ids=blacklist_sim_ids,
-            required_story_progression_arc=required_story_progression_arc, allow_yielding=allow_yielding, start_time=start_time, end_time=end_time, household_id=household_id, club=club,
-            additional_filter_terms=additional_filter_terms, gsi_source_fn=gsi_source_fn, include_rabbithole_sims=include_rabbithole_sims, include_missing_pets=include_missing_pets)
         token = _token() if FIX.active else None
         if token is None or callback is not None or allow_yielding or (sim_filter is not None and sim_filter.is_aggregate_filter()):
             stats['bypassed'] += 1
-            return original(self, sim_filter, callback, **arguments)
+            return original(self, sim_filter, callback, callback_event_data=callback_event_data, sim_constraints=sim_constraints, requesting_sim_info=requesting_sim_info,
+                blacklist_sim_ids=blacklist_sim_ids, required_story_progression_arc=required_story_progression_arc, allow_yielding=allow_yielding, start_time=start_time,
+                end_time=end_time, household_id=household_id, club=club, additional_filter_terms=additional_filter_terms, gsi_source_fn=gsi_source_fn,
+                include_rabbithole_sims=include_rabbithole_sims, include_missing_pets=include_missing_pets)
         if _memo['token'] != token:
             _memo['token'] = token
             _memo['entries'] = {}
@@ -89,10 +89,16 @@ def _make_submit_filter(original):
             cached = _memo['entries'].get(key)
         except TypeError:
             stats['bypassed'] += 1
-            return original(self, sim_filter, callback, **arguments)
+            return original(self, sim_filter, callback, callback_event_data=callback_event_data, sim_constraints=sim_constraints, requesting_sim_info=requesting_sim_info,
+                blacklist_sim_ids=blacklist_sim_ids, required_story_progression_arc=required_story_progression_arc, allow_yielding=allow_yielding, start_time=start_time,
+                end_time=end_time, household_id=household_id, club=club, additional_filter_terms=additional_filter_terms, gsi_source_fn=gsi_source_fn,
+                include_rabbithole_sims=include_rabbithole_sims, include_missing_pets=include_missing_pets)
         if cached is None:
             stats['misses'] += 1
-            results = original(self, sim_filter, callback, **arguments)
+            results = original(self, sim_filter, callback, callback_event_data=callback_event_data, sim_constraints=sim_constraints, requesting_sim_info=requesting_sim_info,
+                    blacklist_sim_ids=blacklist_sim_ids, required_story_progression_arc=required_story_progression_arc, allow_yielding=allow_yielding, start_time=start_time,
+                    end_time=end_time, household_id=household_id, club=club, additional_filter_terms=additional_filter_terms, gsi_source_fn=gsi_source_fn,
+                    include_rabbithole_sims=include_rabbithole_sims, include_missing_pets=include_missing_pets)
             if results is None:
                 return results
             cached = tuple(results)
