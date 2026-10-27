@@ -9,7 +9,7 @@
   <a href="https://github.com/BigBadBleuCheese/LooseEnds/actions/workflows/build.yml"><img alt="Build" src="https://github.com/BigBadBleuCheese/LooseEnds/actions/workflows/build.yml/badge.svg"></a>
   <a href="https://github.com/BigBadBleuCheese/LooseEnds/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/BigBadBleuCheese/LooseEnds"></a>
   <a href="https://github.com/BigBadBleuCheese/LooseEnds/releases"><img alt="Downloads" src="https://img.shields.io/github/downloads/BigBadBleuCheese/LooseEnds/total"></a>
-  <img alt="The Sims 4 1.128.90.1030" src="https://img.shields.io/badge/The%20Sims%204-1.128.90.1030-1A7F37">
+  <img alt="The Sims 4 1.129.39.1030" src="https://img.shields.io/badge/The%20Sims%204-1.129.39.1030-1A7F37">
   <img alt="Python 3.7" src="https://img.shields.io/badge/python-3.7-3776AB?logo=python&amp;logoColor=white">
   <a href="LICENSE"><img alt="MIT License" src="https://img.shields.io/github/license/BigBadBleuCheese/LooseEnds"></a>
 </p>
