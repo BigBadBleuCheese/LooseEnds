@@ -12,6 +12,7 @@ FIX_MODULES = (
     'content_scoring',
     'picked_sim_lookup',
     'dynasty_rules',
+    'tag_checks',
     'social_picker_cooldown',
     'leave_lot',
     'travel_event_subscriptions',

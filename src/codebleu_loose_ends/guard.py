@@ -137,13 +137,16 @@ def evaluate(owner, name, expected, stack_on_mods=True):
 class Fix:
     """
     One independently switchable correction. build() imports what the fix needs and returns (hooks, requirements);
-    nothing is installed unless every one of them checks out.
+    nothing is installed unless every one of them checks out. With restore_when_disabled, switching the fix off puts the
+    game's own attributes back wherever its wrappers are still the installed ones, so a disabled fix costs nothing.
     """
 
-    def __init__(self, key, title, build):
+    def __init__(self, key, title, build, restore_when_disabled=False):
         self.key = key
         self.title = title
         self._build = build
+        self.restore_when_disabled = restore_when_disabled
+        self._installed = []
         self.state = None
         self.detail = 'not installed yet'
         self.notes = []
@@ -191,17 +194,19 @@ class Fix:
         try:
             for hook in hooks:
                 previous = hook.owner.__dict__.get(hook.name, ABSENT)
-                setattr(hook.owner, hook.name, hook.make(None if previous is ABSENT else previous))
-                installed.append((hook, previous))
+                wrapper = hook.make(None if previous is ABSENT else previous)
+                setattr(hook.owner, hook.name, wrapper)
+                installed.append((hook, previous, wrapper))
         except Exception as e:
             logger.exception('Loose Ends: {} failed to install', self.key)
-            for hook, previous in reversed(installed):
+            for hook, previous, _ in reversed(installed):
                 if previous is ABSENT:
                     delattr(hook.owner, hook.name)
                 else:
                     setattr(hook.owner, hook.name, previous)
             self._set(FAULTED, 'failed to install: {}: {}'.format(type(e).__name__, e))
             return
+        self._installed = installed
         self._set(ACTIVE, '; '.join(self.notes) if self.notes else 'all game code matches')
 
     def fault(self, exception=None):
@@ -220,15 +225,32 @@ class Fix:
                 logger.exception('Loose Ends: fault listener failed')
 
 
+    def _swap(self, to_game):
+        """Puts the game's attributes back (or the wrappers back) wherever the other one is still what's installed."""
+        for hook, previous, wrapper in self._installed:
+            current = hook.owner.__dict__.get(hook.name, ABSENT)
+            if to_game and current is wrapper:
+                if previous is ABSENT:
+                    delattr(hook.owner, hook.name)
+                else:
+                    setattr(hook.owner, hook.name, previous)
+            elif not to_game and current is previous:
+                setattr(hook.owner, hook.name, wrapper)
+
+
 def set_enabled(key, enabled):
     """Switches an installed fix off or back on for this session; returns the fix, or None if no fix has that key."""
     for fix in fixes:
         if fix.key != key:
             continue
         if enabled and fix.state == DISABLED:
+            if fix.restore_when_disabled:
+                fix._swap(False)
             fix.state = ACTIVE
         elif not enabled and fix.state == ACTIVE:
             fix.state = DISABLED
+            if fix.restore_when_disabled:
+                fix._swap(True)
         return fix
     return None
 

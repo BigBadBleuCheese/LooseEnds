@@ -1,4 +1,4 @@
-"""Cheat console commands: looseends.status reports every fix; looseends.profile profiles one real pie menu build."""
+"""Cheat console commands: looseends.status reports every fix; looseends.profile profiles one real pie menu build; looseends.profile_autonomy profiles one full autonomy run."""
 
 import datetime
 import io
@@ -9,7 +9,7 @@ import time
 import sims4.commands
 
 from codebleu_loose_ends import guard
-from codebleu_loose_ends.fixes import autonomous_sim_pickers, content_scoring, dynasty_rules, leave_lot, picked_sim_lookup, pie_menu_filters, social_picker_cooldown, travel_event_subscriptions
+from codebleu_loose_ends.fixes import autonomous_sim_pickers, content_scoring, dynasty_rules, leave_lot, picked_sim_lookup, pie_menu_filters, social_picker_cooldown, tag_checks, travel_event_subscriptions
 
 
 @sims4.commands.Command('looseends.status', command_type=sims4.commands.CommandType.Live)
@@ -21,6 +21,7 @@ def loose_ends_status(_connection=None):
     output('Loose Ends: content scoring {}'.format(content_scoring.stats))
     output('Loose Ends: picked Sim lookups {}'.format(picked_sim_lookup.stats))
     output('Loose Ends: dynasty rule checks {}'.format(dynasty_rules.stats))
+    output('Loose Ends: tag checks {}'.format(tag_checks.stats))
     output('Loose Ends: leave lot {}'.format(leave_lot.stats))
     output('Loose Ends: autonomous Sim picker candidates {}'.format(autonomous_sim_pickers.stats))
     output('Loose Ends: social picker cooldown {}'.format(social_picker_cooldown.stats))
@@ -117,6 +118,23 @@ def loose_ends_anatomy(target_id: int = None, _connection=None):
     except Exception as e:
         guard.logger.exception('Loose Ends: anatomy failed')
         output('Loose Ends: anatomy failed: {}: {}'.format(type(e).__name__, e))
+
+
+@sims4.commands.Command('looseends.profile_autonomy', command_type=sims4.commands.CommandType.Live)
+def loose_ends_profile_autonomy(sim_id: int = None, runs: int = 3, _connection=None):
+    import services
+    output = sims4.commands.CheatOutput(_connection)
+    sim = services.object_manager().get(sim_id) if sim_id is not None else None
+    if sim is None or not getattr(sim, 'is_sim', False):
+        output('Loose Ends: usage: looseends.profile_autonomy <sim id> [runs]')
+        return
+    try:
+        from codebleu_loose_ends import autonomy_profile
+        summary, base = autonomy_profile.run(sim, max(1, runs), _profiler, _write_profile)
+        output('Loose Ends: {}. Wrote {}.txt and .prof'.format(summary, base))
+    except Exception as e:
+        guard.logger.exception('Loose Ends: autonomy profile failed')
+        output('Loose Ends: autonomy profile failed: {}: {}'.format(type(e).__name__, e))
 
 
 _next_picker = {'armed': False, 'connection': None, 'installed': False, 'timing': False, 'times': {}}

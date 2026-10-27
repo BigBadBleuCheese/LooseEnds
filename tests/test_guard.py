@@ -151,6 +151,51 @@ class GuardTests(unittest.TestCase):
         guard.set_enabled('test', True)
         self.assertEqual(fix.state, guard.GAME_CHANGED, 'enable never turns on a fix that failed its checks')
 
+    def test_restoring_fix_puts_the_game_back_while_disabled(self):
+        original = self.owner.__dict__['get_ordered_types']
+        guard.fixes.clear()
+        fix = guard.Fix('test', 'Test fix', lambda: ([self.hook()], []), restore_when_disabled=True)
+        fix.install()
+        wrapper = self.owner.__dict__['get_ordered_types']
+        self.assertIsNot(wrapper, original)
+        guard.set_enabled('test', False)
+        self.assertEqual(fix.state, guard.DISABLED)
+        self.assertIs(self.owner.__dict__['get_ordered_types'], original)
+        guard.set_enabled('test', True)
+        self.assertEqual(fix.state, guard.ACTIVE)
+        self.assertIs(self.owner.__dict__['get_ordered_types'], wrapper)
+
+    def test_restoring_fix_leaves_later_mod_wrappers_alone(self):
+        guard.fixes.clear()
+        fix = guard.Fix('test', 'Test fix', lambda: ([self.hook()], []), restore_when_disabled=True)
+        fix.install()
+        later = mod_wrapper(self.owner.__dict__['get_ordered_types'], 'later_mod')
+        self.owner.get_ordered_types = later
+        guard.set_enabled('test', False)
+        self.assertIs(self.owner.__dict__['get_ordered_types'], later)
+        guard.set_enabled('test', True)
+        self.assertIs(self.owner.__dict__['get_ordered_types'], later)
+        self.assertEqual(fix.state, guard.ACTIVE)
+
+    def test_restoring_fix_removes_and_returns_added_attributes(self):
+        base = type('Base', (), {'_destroy': lambda self: 'base'})
+        owner = type('Owner', (base,), {})
+        guard.fixes.clear()
+        fix = guard.Fix('test', 'Test fix', lambda: ([guard.Hook(owner, '_destroy', guard.ABSENT, lambda _: lambda self: 'added')], []), restore_when_disabled=True)
+        fix.install()
+        guard.set_enabled('test', False)
+        self.assertNotIn('_destroy', owner.__dict__)
+        self.assertEqual(owner()._destroy(), 'base')
+        guard.set_enabled('test', True)
+        self.assertEqual(owner()._destroy(), 'added')
+
+    def test_other_fixes_keep_their_wrappers_while_disabled(self):
+        fix = fresh_fix(lambda: ([self.hook()], []))
+        fix.install()
+        wrapper = self.owner.__dict__['get_ordered_types']
+        guard.set_enabled('test', False)
+        self.assertIs(self.owner.__dict__['get_ordered_types'], wrapper)
+
     def test_fault_switches_off_and_notifies(self):
         heard = []
         guard.fault_listeners[:] = [heard.append]
