@@ -16,6 +16,10 @@
 
 A script mod for The Sims 4 that fixes game state EA leaves dangling: loops that never back off, failures with no fallback, event listeners that are lost or never removed, and work the game repeats when the answer can't have changed. Each of these makes the game slower or makes Sims misbehave.
 
+This mod's theme song is called "Twelve Years of Patches":
+
+[![Twelve Years of Patches](https://img.youtube.com/vi/8DazSwjc5PM/maxresdefault.jpg)](https://youtu.be/8DazSwjc5PM)
+
 ## What it fixes
 
 | Fix | What you'll notice |
