@@ -11,6 +11,7 @@ FIX_MODULES = (
     'autonomous_sim_pickers',
     'content_scoring',
     'picked_sim_lookup',
+    'all_participants',
     'dynasty_rules',
     'tag_checks',
     'social_picker_cooldown',

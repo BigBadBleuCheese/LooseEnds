@@ -1,4 +1,4 @@
-"""Cheat console commands: looseends.status reports every fix; looseends.profile profiles one real pie menu build; looseends.profile_autonomy profiles one full autonomy run."""
+"""Cheat console commands: looseends.status reports every fix; looseends.profile profiles one real pie menu build; looseends.profile_autonomy profiles one full autonomy run; looseends.watch_lag profiles simulation ticks when a lot loads or a tick runs slow; looseends.count_participants counts participant lookups by type."""
 
 import datetime
 import io
@@ -9,7 +9,7 @@ import time
 import sims4.commands
 
 from codebleu_loose_ends import guard
-from codebleu_loose_ends.fixes import autonomous_sim_pickers, content_scoring, dynasty_rules, leave_lot, picked_sim_lookup, pie_menu_filters, social_picker_cooldown, tag_checks, travel_event_subscriptions
+from codebleu_loose_ends.fixes import all_participants, autonomous_sim_pickers, content_scoring, dynasty_rules, leave_lot, picked_sim_lookup, pie_menu_filters, social_picker_cooldown, tag_checks, travel_event_subscriptions
 
 
 @sims4.commands.Command('looseends.status', command_type=sims4.commands.CommandType.Live)
@@ -20,6 +20,7 @@ def loose_ends_status(_connection=None):
     output('Loose Ends: pie menu Sim filter memo {}'.format(pie_menu_filters.stats))
     output('Loose Ends: content scoring {}'.format(content_scoring.stats))
     output('Loose Ends: picked Sim lookups {}'.format(picked_sim_lookup.stats))
+    output('Loose Ends: all participant lookups {}'.format(all_participants.stats))
     output('Loose Ends: dynasty rule checks {}'.format(dynasty_rules.stats))
     output('Loose Ends: tag checks {}'.format(tag_checks.stats))
     output('Loose Ends: leave lot {}'.format(leave_lot.stats))
@@ -135,6 +136,35 @@ def loose_ends_profile_autonomy(sim_id: int = None, runs: int = 3, _connection=N
     except Exception as e:
         guard.logger.exception('Loose Ends: autonomy profile failed')
         output('Loose Ends: autonomy profile failed: {}: {}'.format(type(e).__name__, e))
+
+
+@sims4.commands.Command('looseends.watch_lag', command_type=sims4.commands.CommandType.Live)
+def loose_ends_watch_lag(seconds: str = '60', threshold_ms: int = 150, _connection=None):
+    output = sims4.commands.CheatOutput(_connection)
+    try:
+        from codebleu_loose_ends import lag_watch
+        if seconds.lower() == 'stop':
+            output('Loose Ends: stopped watching for lag.' if lag_watch.stop() else 'Loose Ends: was not watching for lag.')
+            return
+        lag_watch.start(max(5, int(seconds)), max(1, threshold_ms), output, _profiler, _write_profile, guard.logger)
+    except Exception as e:
+        guard.logger.exception('Loose Ends: watch_lag failed')
+        output('Loose Ends: watch_lag failed: {}: {}'.format(type(e).__name__, e))
+
+
+@sims4.commands.Command('looseends.count_participants', command_type=sims4.commands.CommandType.Live)
+def loose_ends_count_participants(seconds: str = '120', _connection=None):
+    output = sims4.commands.CheatOutput(_connection)
+    try:
+        from codebleu_loose_ends import participant_count
+        if seconds.lower() == 'stop':
+            if not participant_count.stop():
+                output('Loose Ends: was not counting participant lookups.')
+            return
+        participant_count.start(max(5, int(seconds)), output, _mods_folder, guard.logger)
+    except Exception as e:
+        guard.logger.exception('Loose Ends: count_participants failed')
+        output('Loose Ends: count_participants failed: {}: {}'.format(type(e).__name__, e))
 
 
 _next_picker = {'armed': False, 'connection': None, 'installed': False, 'timing': False, 'times': {}}

@@ -21,12 +21,14 @@ class PackageTests(unittest.TestCase):
         from ui import ui_dialog_notification
         from zone import Zone
 
-        self.assertEqual(len(guard.fixes), 13)
+        self.assertEqual(len(guard.fixes), 14)
         self.assertEqual({fix.state for fix in guard.fixes}, {guard.GAME_CHANGED})
         self.assertIn('looseends.status', commands.registered)
         self.assertIn('looseends.profile', commands.registered)
         self.assertIn('looseends.anatomy', commands.registered)
         self.assertIn('looseends.profile_autonomy', commands.registered)
+        self.assertIn('looseends.watch_lag', commands.registered)
+        self.assertIn('looseends.count_participants', commands.registered)
         self.assertIn('looseends.profile_next_picker', commands.registered)
         self.assertIn('looseends.time_next_picker', commands.registered)
         self.assertIn('looseends.disable', commands.registered)
@@ -46,7 +48,7 @@ class PackageTests(unittest.TestCase):
         self.assertEqual(len(ui_dialog_notification.shown), 1, 'shown only once per session')
 
         commands.registered['looseends.status']()
-        self.assertEqual(len(commands.CheatOutput.lines), 22)
+        self.assertEqual(len(commands.CheatOutput.lines), 24)
 
 
 if __name__ == '__main__':

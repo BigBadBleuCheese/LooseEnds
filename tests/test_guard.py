@@ -209,6 +209,33 @@ class GuardTests(unittest.TestCase):
         self.assertEqual(heard, [fix])
         guard.fault_listeners.clear()
 
+    def test_installed_fix_wrappers_are_seen_through(self):
+        original = self.owner.__dict__['get_ordered_types']
+        fix = fresh_fix(lambda: ([self.hook()], []))
+        fix.install()
+        wrapper = self.owner.__dict__['get_ordered_types']
+        self.assertIsNot(wrapper, original)
+        self.assertIs(guard.unpatched(wrapper), original)
+        diagnostic = mod_wrapper(wrapper)
+        guard.temporary[id(diagnostic)] = wrapper
+        self.assertIs(guard.unpatched(diagnostic), original)
+        guard.temporary.clear()
+        self.assertIs(guard.unpatched(original), original)
+        other_mod = mod_wrapper(wrapper)
+        self.assertIs(guard.unpatched(other_mod), other_mod)
+
+    def test_failed_install_forgets_its_wrappers(self):
+        before = dict(guard.own)
+
+        def explode(original):
+            raise RuntimeError('cannot wrap')
+
+        second = type('Second', (), {'get_ordered_types': ea_function(*GET_ORDERED_TYPES[:2])})
+        fix = fresh_fix(lambda: ([self.hook(), guard.Hook(second, 'get_ordered_types', GET_ORDERED_TYPES[2], explode)], []))
+        fix.install()
+        self.assertEqual(fix.state, guard.FAULTED)
+        self.assertEqual(guard.own, before)
+
 
 if __name__ == '__main__':
     unittest.main()

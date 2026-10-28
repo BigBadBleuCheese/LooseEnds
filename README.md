@@ -26,6 +26,7 @@ A script mod for The Sims 4 that fixes game state EA leaves dangling: loops that
 | Find a Sim picker's candidate for its tests without the long lookup | Pie menus open faster. Interactions where you pick a Sim test every Sim in the game before they can be shown, and every test looked up the candidate the long way. |
 | Check pie menu entries against dynasty rules without rebuilding every rule | Pie menus open faster for Sims in a dynasty. Every entry was checked against every dynasty rule by rebuilding that rule's list of interactions; now each list is built once. |
 | Faster object tag checks for autonomy and interaction filters | Sims decide what to do faster, especially on busy lots and with mods that add interactions through traits. Checking whether an object has any tag from a list rebuilt the object's whole tag list once for every tag in that list; now it's one comparison. |
+| Answer "every participant" lookups without checking every participant type | Busy lots (high schools especially) lag less. Every time the game tests an interaction for a Sim, it looks up all of the interaction's participants by checking more than 150 kinds of participant one at a time; now only the dozen that can apply are checked. |
 | Phantom "too Tense/Uncomfortable" mood fix | Sims are no longer refused interactions as "far too Tense" or "far too Uncomfortable" while their mood is positive. |
 | Autonomous Sim pickers skip Sims their follow-up can't run on | Pets stop trying to wake up Sims who aren't asleep, over and over. Sims stop repeatedly starting chats with Sims they can't actually talk to. |
 | Autonomous chats that find nothing to say stop retrying the same Sim | Part of the chat fix above. |
@@ -60,10 +61,12 @@ Open the console with Ctrl+Shift+C. None of these need `testingcheats`.
 | `looseends.profile <sim id>` | Times building the active Sim's pie menu for that Sim and writes a profile to your Mods folder. |
 | `looseends.anatomy <sim id>` | Builds the same pie menu and writes a report to your Mods folder of which interactions, tests and Sim pickers took the time. |
 | `looseends.profile_autonomy <sim id> [runs]` | Runs that Sim's autonomy (without pushing anything) a few times, then once counted and once profiled, and writes a report to your Mods folder of where the time went. |
+| `looseends.watch_lag [seconds] [ms]` | Watches every simulation tick until `looseends.watch_lag stop`, including across travel. When you start it, each time a lot finishes loading, and whenever a tick takes longer than `ms` (150 by default), it profiles the next `seconds` real seconds (60 by default, up to 8 captures) and writes a report to your Mods folder. |
+| `looseends.count_participants [seconds]` | Counts every participant lookup the game makes for interactions over the next `seconds` real seconds (120 by default), by participant type and by what asked, with the time each took, and writes a report to your Mods folder. `looseends.count_participants stop` ends it early. |
 | `looseends.profile_next_picker` | Profiles the next picker window you open (for example, the recipe picker). |
 | `looseends.time_next_picker` | Times the next picker window from your click to the window being sent. |
 
-Fix names for `disable`/`enable`: `ordered_types`, `pie_menu_filters`, `phantom_mood`, `autonomous_sim_pickers`, `content_scoring`, `picked_sim_lookup`, `dynasty_rules`, `social_picker_cooldown`, `leave_lot`, `travel_event_subscriptions`, `small_business_employee_events`, `chef_events`.
+Fix names for `disable`/`enable`: `ordered_types`, `pie_menu_filters`, `phantom_mood`, `autonomous_sim_pickers`, `content_scoring`, `picked_sim_lookup`, `all_participants`, `dynasty_rules`, `tag_checks`, `social_picker_cooldown`, `leave_lot`, `travel_event_subscriptions`, `small_business_employee_events`, `chef_events`.
 
 ## For modders
 

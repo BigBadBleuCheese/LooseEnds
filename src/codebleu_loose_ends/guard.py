@@ -27,13 +27,22 @@ DISABLED = 'disabled by player'
 fixes = []
 fault_listeners = []
 temporary = {}
+own = {}
 
 
 def unpatched(value):
-    """The attribute value behind any temporary diagnostic wrappers (looseends.anatomy) installed over it."""
-    while temporary and id(value) in temporary:
-        value = temporary[id(value)]
-    return value
+    """
+    The attribute value behind Loose Ends' own wrappers installed over it: installed fixes (which always give the game's
+    answers) and temporary diagnostic wrappers (looseends.anatomy).
+    """
+    while True:
+        key = id(value)
+        if key in temporary:
+            value = temporary[key]
+        elif key in own:
+            value = own[key]
+        else:
+            return value
 
 
 class Hook:
@@ -197,9 +206,12 @@ class Fix:
                 wrapper = hook.make(None if previous is ABSENT else previous)
                 setattr(hook.owner, hook.name, wrapper)
                 installed.append((hook, previous, wrapper))
+                if previous is not ABSENT:
+                    own[id(wrapper)] = previous
         except Exception as e:
             logger.exception('Loose Ends: {} failed to install', self.key)
-            for hook, previous, _ in reversed(installed):
+            for hook, previous, wrapper in reversed(installed):
+                own.pop(id(wrapper), None)
                 if previous is ABSENT:
                     delattr(hook.owner, hook.name)
                 else:
