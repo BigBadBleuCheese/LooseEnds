@@ -18,11 +18,6 @@ A script mod for The Sims 4 that fixes game state EA leaves dangling: loops that
 
 <p align="center"><a href="https://github.com/Llama-Logic/LlamaLogic/blob/main/MANIFESTED.md" title="This mod has a manifest inside. Click here to learn more."><img src="https://raw.githubusercontent.com/Llama-Logic/LlamaLogic/refs/heads/main/Manifested.png" width="180" height="60" /></a></p>
 
-
-This mod's theme song is called "Twelve Years of Patches":
-
-[![Twelve Years of Patches](https://img.youtube.com/vi/8DazSwjc5PM/maxresdefault.jpg)](https://youtu.be/8DazSwjc5PM)
-
 ## What it fixes
 
 | Fix | What you'll notice |
